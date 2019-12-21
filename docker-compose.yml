@@ -1,0 +1,28 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'pass'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+  app:
+    build: .
+    environment:
+      RAILS_ENV: development
+      EDITOR: vim
+    volumes:
+      - .:/app
+      - bundle_install:/usr/local/bundle
+    links:
+      - db
+    ports:
+      - "3000:3000"
+volumes:
+  mysql-data:
+    driver: local
+  bundle_install:
+    driver: local
