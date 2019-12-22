@@ -2,7 +2,6 @@ version: '3'
 services:
   db:
     image: mysql:5.7
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 'pass'
     ports:
@@ -21,8 +20,20 @@ services:
       - db
     ports:
       - "3000:3000"
+  minio:
+    image: minio/minio:latest
+    ports:
+      - 9000:9000
+    volumes:
+      - minio:/data
+    command: server /data
+    environment:
+      MINIO_ACCESS_KEY: minio_access_key
+      MINIO_SECRET_KEY: minio_secret_key
 volumes:
   mysql-data:
     driver: local
   bundle_install:
+    driver: local
+  minio:
     driver: local
