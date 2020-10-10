@@ -69,7 +69,10 @@ class Tasks::Board::Exec < Tasks::Base
             url = "#{board.domain}dat/#{thread_created_at.to_s}.dat"
             thread = ScThread.where(sc_board: board, url: url).first
             if thread.blank?
-              target << { sc_board_id: board.id, title: title, url: url, thread_created_at: Time.at(thread_created_at), res: res_i, momentum: 0, is_completed: false, created_at: now, updated_at: now }
+              target << ScThread.new(sc_board: board, title: title, url: url, thread_created_at: Time.at(thread_created_at), res: res_i, momentum: 0, is_completed: false)
+            else
+              thread.res = res_i
+              target << thread
             end
           end
         rescue => e
@@ -78,7 +81,7 @@ class Tasks::Board::Exec < Tasks::Base
         end
       end
     end
-    ScThread.insert_all(target)
+    ScThread.import(target, on_duplicate_key_update: [:res])
   end
   
   def self.fetch_thread(url)
@@ -156,9 +159,10 @@ class Tasks::Board::Exec < Tasks::Base
       next if item.thread_created_at.blank?
 
        # レス数 / (現在のUNIX時間 - スレッド内の1番目の投稿のUNIX時間) ÷ 86400
-       momentum = item.res / ((Time.now.to_i - item.thread_created_at.to_i) / 86400)
-       target << { id: item.id, momentum: momentum, created_at: now, updated_at: now }
+       num = (Time.now.to_i - item.thread_created_at.to_i) / 86400
+       item.momentum = num.zero? ? 0 : item.res / num
+       target << item
     end
-    ScThread.upsert_all(target)
+    ScThread.import(target, on_duplicate_key_update: [:momentum])
   end
 end
