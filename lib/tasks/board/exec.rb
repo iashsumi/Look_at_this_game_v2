@@ -10,8 +10,8 @@ class Tasks::Board::Exec < Tasks::Base
     client = S3.new
     # スレ更新
     fetch_board
-
     # 各板の勢いの強い順に並び替え、TOP200に対してスクレピングしてコメをまとめる(勢いが0のものは取得しない)
+    complete = []
     ScThread.where.not(momentum: 0).order(momentum: "DESC").limit(200).each do | item |
       # url = 'http://awabi.2ch.sc/gamenews/dat/1525433661.dat'
       fetched_data = fetch_thread(item.url)
@@ -19,15 +19,20 @@ class Tasks::Board::Exec < Tasks::Base
       
       # S3 UPLOAD
       client.put_object(item.id.to_s, JSON.dump(fetched_data))
-      # データを取得したらフラグ更新
-      item.update(is_completed: true)
+      complete << item.id
       # 取得の間隔制御
       sleep 3
     end
+    # 更新完了フラグ立てる
+    ScThread.where(id: complete).update_all(is_completed: true)
+    # 勢い計算
+    calc_momentum
     notifier.ping('End Tasks::Board::Exec')
   end
 
   def self.fetch_board
+    now = Time.now
+    target = []
     ScBoard.all.each do | board |
       doc = fetch_html(board.threads_url)
       next if doc.blank?
@@ -62,22 +67,9 @@ class Tasks::Board::Exec < Tasks::Base
             res = node.children.text.match(%r@\(\d{1,4}\)@m)[0]
             res_i = res.slice(1, (res.length - 1)).to_i
             url = "#{board.domain}dat/#{thread_created_at.to_s}.dat"
-            momentum = nil
-            # レス数が２０以下の場合は0
-            if res_i <= 20
-              momentum = 0
-            else
-              # レス数 / (現在のUNIX時間 - スレッド内の1番目の投稿のUNIX時間) ÷ 86400
-              num = (Time.now.to_i - thread_created_at) / 86400
-              momentum = (num.zero? || num < 0) ? 0 : res_i / num
-            end
             thread = ScThread.where(sc_board: board, url: url).first
-            if thread.present?
-              thread.res = res_i
-              thread.momentum = momentum
-              thread.save!
-            else
-              ScThread.create(sc_board: board, title: title, url: url, thread_created_at: Time.at(thread_created_at), res: res_i, momentum: momentum, is_completed: false)
+            if thread.blank?
+              target << { sc_board_id: board.id, title: title, url: url, thread_created_at: Time.at(thread_created_at), res: res_i, momentum: 0, is_completed: false, created_at: now, updated_at: now }
             end
           end
         rescue => e
@@ -86,6 +78,7 @@ class Tasks::Board::Exec < Tasks::Base
         end
       end
     end
+    ScThread.insert_all(target)
   end
   
   def self.fetch_thread(url)
@@ -152,5 +145,20 @@ class Tasks::Board::Exec < Tasks::Base
   rescue => e
     ExceptionNotifier.notify_exception(e, :env => Rails.env, :data => {:message => url})
     nil
+  end
+
+  # 勢いの計算
+  def self.calc_momentum
+    now = Time.now
+    target = []
+    # レスが20より多いものが対象
+    ScThread.where('res > 20').find_each do | item |
+      next if item.thread_created_at.blank?
+
+       # レス数 / (現在のUNIX時間 - スレッド内の1番目の投稿のUNIX時間) ÷ 86400
+       momentum = item.res / ((Time.now.to_i - item.thread_created_at.to_i) / 86400)
+       target << { id: item.id, momentum: momentum, created_at: now, updated_at: now }
+    end
+    ScThread.upsert_all(target)
   end
 end
