@@ -125,13 +125,15 @@ class Tasks::Board::Exec < Tasks::Base
     data.each do | item |
       # 1件目は必ず入れる
       target << item if item[:no] == 1
-      res = filter.find{ |i| i[:res_no] == item[:no] }
+      res = filter.select{ |i| i[:res_no] == item[:no] }
       next if res.blank?
       # 最初に入れているので除外 || すでに同じ項目がある場合は除外(子に対するレスなど)
       target << item unless item[:no] == 1 || target.find{ |i| i[:no] == item[:no] }.present?
-      # レスのデータは目印をつける
-      res[:item].store(:child, true)
-      target << res[:item]
+      res.each do | i |
+        # レスのデータは目印をつける
+        i[:item].store(:child, true)
+        target << i[:item]
+      end
     end
     target
   end
