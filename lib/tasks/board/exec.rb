@@ -105,7 +105,14 @@ class Tasks::Board::Exec < Tasks::Base
       date = values[2].match(%r@\d{4}/\d{2}/\d{2}\(.\) \d{2}\:\d{2}:\d{2}@m)
       id = values[2].match(%r@ID\:.+@m)
       text = values[3]
-      data << { title: title, no: no, name: name, date: date, id: id, text: text }
+      # 画像を含む場合は抽出
+      images = []
+      # jpg, png, bmp, gifを取得
+      # scanだと()を含むと()の部分にマッチした文字列の配列の配列を返すので下記の書き方でやる
+      values[3].scan(%r{https?://[\w_.!*\/')(-]+\.jpg|https?://[\w_.!*\/')(-]+\.png|https?://[\w_.!*\/')(-]+\.bmp|https?://[\w_.!*\/')(-]+\.gif}).to_a.each do | image |
+        images << image
+      end
+      data << { title: title, no: no, name: name, date: date, id: id, text: text, images: images }
     end
 
     # レス抽出
