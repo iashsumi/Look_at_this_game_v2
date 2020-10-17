@@ -7,12 +7,12 @@ set :application, "look_at_this_game"
 # 指定のディレクトリのシンボルを作成
 set :linked_dirs, %w(log)
 # master.keyは手動でshared/config/master.keyを作成し、ローカルの内容をコピー
-append :linked_files, 'config/master.key'
+append :linked_files, "config/master.key"
 # デプロイ先の指定
 set :deploy_to, "/home/ec2-user/deploy"
- 
+
 # 指定のディレクトリのシンボルを作成
-append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system", '.bundle'
+append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system", ".bundle"
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
@@ -48,12 +48,12 @@ append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/syst
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 namespace :deploy do
-  desc 'restart nginx'
+  desc "restart nginx"
   task :nginx_restart do
     on roles(:app) do
       execute "sudo service nginx stop"
       execute "sudo service nginx start"
     end
   end
-  after  :finished, :nginx_restart
+  after :finished, :nginx_restart
 end

@@ -5,6 +5,6 @@ Rails.application.routes.draw do
     resources :commentators, only: [:index, :show]
     resources :videos, only: [:index]
     resources :sc_threads, only: [:index, :show]
-    resources :dashboard, only: [:index]  
+    resources :dashboard, only: [:index]
   end
 end
