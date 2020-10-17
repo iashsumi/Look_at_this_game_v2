@@ -1,0 +1,16 @@
+# 日本語でのコメントを許可
+AsciiComments:
+  Enabled: false
+
+# クラスにコメントを残さない
+Documentation:
+  Enabled: false
+
+# 除外
+AllCops:
+  Exclude:
+    - db/**/*
+    - config/**/*
+    - bin/**/*
+    - Gemfile
+    - Rakefile
