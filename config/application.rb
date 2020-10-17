@@ -1,4 +1,4 @@
-require_relative 'boot'
+require_relative "boot"
 
 require "rails"
 # Pick the frameworks you want:
@@ -37,6 +37,6 @@ module App
     # task実行の為に追加
     config.autoload_paths += Dir["#{config.root}/lib"]
 
-    config.time_zone = 'Tokyo'
+    config.time_zone = "Tokyo"
   end
 end

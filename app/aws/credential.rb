@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 class Credential
   def self.create
     # リージョン
-    region = 'ap-northeast-1'
-    if Rails.env == 'development'
+    region = "ap-northeast-1"
+    if Rails.env == "development"
       # ローカルの場合
       Aws.config.update(
-        endpoint: 'http://minio:9000',
-        access_key_id: 'minio_access_key',
-        secret_access_key: 'minio_secret_key',
+        endpoint: "http://minio:9000",
+        access_key_id: "minio_access_key",
+        secret_access_key: "minio_secret_key",
         force_path_style: true,
         region: region
       )

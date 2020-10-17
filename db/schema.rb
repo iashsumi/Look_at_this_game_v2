@@ -11,7 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema.define(version: 2018_12_01_041915) do
-
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
     t.string "user_id", null: false, comment: "動画のサイト上のユーザーID"
@@ -86,5 +85,4 @@ ActiveRecord::Schema.define(version: 2018_12_01_041915) do
     t.datetime "updated_at", null: false
     t.index ["commentator_id"], name: "index_videos_on_commentator_id"
   end
-
 end

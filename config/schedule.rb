@@ -21,14 +21,14 @@
 
 # MEMO
 # cron への反映
-# $ bundle exec whenever --update-crontab 
+# $ bundle exec whenever --update-crontab
 # cron へ反映した内容の確認（どちらの行でも確認できる）
-# $ bundle exec whenever 
+# $ bundle exec whenever
 # $ bundle exec crontab -e
 # cron へ反映した内容を削除
 # $ bundle exec whenever --clear-crontab
 
-set :output, 'log/crontab.log'
+set :output, "log/crontab.log"
 set :runner_command, "rails runner"
 
 # まとめ情報作成
