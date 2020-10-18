@@ -19,12 +19,15 @@ class Tasks::Board::Exec < Tasks::Base
 
       # S3 UPLOAD
       client.put_object(item.id.to_s, JSON.dump(fetched_data))
-      complete << item.id
+      res = fetched_data.find { |i| i[:images].present? }
+      item.thumbnail_url = res[:images].first if res.present?
+      item.is_completed = true
+      complete << item
       # 取得の間隔制御
       sleep 3
     end
-    # 更新完了フラグ立てる
-    ScThread.where(id: complete).update_all(is_completed: true)
+    # データ更新
+    ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])
     # 勢い計算
     service.calc_momentum
   end

@@ -144,6 +144,8 @@ class Tasks::Board::Service
       # jpg, png, bmp, gifを取得
       # scanだと()を含むと()の部分にマッチした文字列の配列の配列を返すので下記の書き方でやる
       values[3].scan(%r{https?://[\w_.!*\/')(-]+\.jpg|https?://[\w_.!*\/')(-]+\.png|https?://[\w_.!*\/')(-]+\.bmp|https?://[\w_.!*\/')(-]+\.gif}).to_a.each do |image|
+        # httpsじゃない場合、httpsに置き換え
+        image.delete_prefix("http").prepend("https") unless image[0..4] == "https"
         images << image
       end
       { title: title, no: no, name: name, date: date, id: id, text: text, images: images }
