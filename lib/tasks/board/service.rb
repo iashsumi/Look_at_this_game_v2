@@ -54,8 +54,8 @@ class Tasks::Board::Service
       next if item.thread_created_at.blank?
 
       # レス数 / (現在のUNIX時間 - スレッド内の1番目の投稿のUNIX時間) ÷ 86400
-      num = ((Time.now.to_i - item.thread_created_at.to_i) / 86_400).to_f
-      item.momentum = num.zero? ? 0 : (item.res / num).to_f
+      num = (Time.now.to_i - item.thread_created_at.to_i).to_f / 86_400.to_f
+      item.momentum = num.zero? ? 0 : item.res / num
       target << item
     end
     ScThread.import(target, on_duplicate_key_update: [:momentum])
