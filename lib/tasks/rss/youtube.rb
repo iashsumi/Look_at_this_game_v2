@@ -18,6 +18,8 @@ class Tasks::Rss::Youtube < Tasks::Base
         params = { commentator: commentator, item: item, content_id: content_id }
         bulk_insert_video << build_video(id, params, video&.created_at)
       end
+    rescue StandardError => e
+      ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: commentator.id })
     end
     Video.upsert_all(bulk_insert_video) if bulk_insert_video.present?
   end
