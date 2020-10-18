@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 class S3
   # バケット名
-  BUCKET = 'look-at-this-game-2ch'.freeze
+  BUCKET = "look-at-this-game-2ch"
 
   def initialize
     # 認証情報取得
@@ -8,7 +10,7 @@ class S3
   end
 
   def put_object(file_name, body)
-    @client.put_object(bucket: BUCKET, key: file_name, body: body) 
+    @client.put_object(bucket: BUCKET, key: file_name, body: body)
   end
 
   def fetch_object(file_name)

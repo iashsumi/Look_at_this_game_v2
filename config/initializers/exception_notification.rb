@@ -1,4 +1,4 @@
-require 'exception_notification/rails'
+require "exception_notification/rails"
 
 
 
@@ -46,6 +46,6 @@ ExceptionNotification.configure do |config|
 
   config.add_notifier :slack, {
     webhook_url: Rails.application.credentials.slack_url,
-    channel: '#exception_notification'
+    channel: "#exception_notification"
   }
 end

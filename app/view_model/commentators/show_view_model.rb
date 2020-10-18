@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 class Commentators::ShowViewModel
   def initialize(commentator)
     @commentator = commentator
   end
 
-  def to_json
+  def to_json(*_args)
     {
       id: @commentator.id,
       name: @commentator.id,

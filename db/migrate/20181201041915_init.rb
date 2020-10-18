@@ -7,7 +7,7 @@ class Init < ActiveRecord::Migration[5.2]
       t.string :thumbnail_url, null: false
       t.timestamps
     end
-    
+
     create_table :videos do |t|
       t.references :commentator
       t.string :content_id, null: false
