@@ -193,7 +193,7 @@ class Tasks::Board::Service
           end
         end
       end
-      target
+      target.uniq
     end
 
     # レスを順番に取得
