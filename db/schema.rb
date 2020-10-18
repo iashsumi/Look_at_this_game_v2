@@ -10,7 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_01_041915) do
+ActiveRecord::Schema.define(version: 2020_10_18_041915) do
+
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
     t.string "user_id", null: false, comment: "動画のサイト上のユーザーID"
@@ -64,7 +65,7 @@ ActiveRecord::Schema.define(version: 2018_12_01_041915) do
     t.text "url"
     t.datetime "thread_created_at", comment: "スレッド内の1番目の投稿の時間"
     t.integer "res", comment: "レスの数"
-    t.integer "momentum", comment: "勢い"
+    t.decimal "momentum", precision: 10, scale: 3, comment: "勢い"
     t.boolean "is_completed", comment: "スレのデータを取得ずみかどうか(trueのデータのみフロントに返す)"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -85,4 +86,5 @@ ActiveRecord::Schema.define(version: 2018_12_01_041915) do
     t.datetime "updated_at", null: false
     t.index ["commentator_id"], name: "index_videos_on_commentator_id"
   end
+
 end

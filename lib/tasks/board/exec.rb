@@ -13,7 +13,7 @@ class Tasks::Board::Exec < Tasks::Base
     service.update_thread
     # 各板の勢いの強い順に並び替え、TOP200に対してスクレピングしてコメをまとめる(勢いが0のものは取得しない)
     complete = []
-    ScThread.where.not(momentum: 0).order(momentum: "DESC").limit(200).each do |item|
+    ScThread.where.not(momentum: 0).great.limit(200).each do |item|
       fetched_data = service.fetch_res(item.url)
       next if fetched_data.blank?
 
