@@ -157,7 +157,14 @@ class Tasks::Board::Service
         ele.search("a").each do |node|
           # ">>101"この状態なので、不要な部分を削除して、Intに変換
           res_no = node.children.text.delete(">>").to_i
-          reply << { res_no: res_no, item: item }
+          # 自分自身へのレスがあったら追加しない
+          next if res_no == item[:no]
+          # 循環参照になりうるレスは追加しない(自分の投稿よりあとへのレスもある)
+          next if res_no > item[:no]
+          # 1へのレスは追加しない
+          next if res_no == 1
+
+          reply << { no: item[:no], parent_no: res_no, item: item }
         end
       end
       reply
@@ -169,33 +176,44 @@ class Tasks::Board::Service
       data.each do |item|
         # 1件目は必ず入れる
         target << item if item[:no] == 1
-        res = reply.select { |i| i[:res_no] == item[:no] }
+        res = reply.select { |i| i[:parent_no] == item[:no] }
         next if res.blank?
 
         # 最初に入れているので除外 || すでに同じ項目がある場合は除外(子に対するレスなど)
-        next unless item[:no] == 1 || target.find { |i| i[:no] == item[:no] }.present?
+        next if item[:no] == 1 || target.find { |i| i[:no] == item[:no] }.present?
+
         target << item
-        fetch_res_recursively(res, reply).each do |i|
-          # レスのデータは目印をつける
-          i[:item].store(:child, true)
-          target << i[:item]
+        res.each do |i|
+          fetch_res_loop(i, reply).each do |j|
+            # レスのデータは目印をつける
+            j[:item].store(:child, true)
+            target << j[:item]
+          end
         end
       end
       target
     end
 
-    # 再帰でレスを順番に取得
-    def fetch_res_recursively(res, reply)
-      res.map do | i |
-        a = reply.select { |j| j[:res_no] == i[:item][:no] }
-        next i if a.blank?
-        b = fetch_res_recursively(a, reply)
-        if b.blank?
-          result = [i] + a
-        else
-          result = [i] + a + b
+    # レスを順番に取得
+    def fetch_res_loop(child, reply)
+      return [] if child.blank?
+
+      result = [child]
+      target = [child]
+      loop do
+        a = []
+        break if target.flatten.blank?
+
+        target.each do |i|
+          a << reply.select { |j| j[:parent_no] == i[:no] }
+          break if a.blank?
+
+          parent_index = result.index { |v| v[:no] == i[:no] }
+          result.insert(parent_index + 1, a)
+          result.flatten!
         end
-        result.uniq
-      end&.flatten
+        target = a.flatten
+      end
+      result.flatten
     end
 end
