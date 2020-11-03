@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_18_041916) do
+ActiveRecord::Schema.define(version: 2020_11_03_041916) do
 
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
@@ -57,6 +57,16 @@ ActiveRecord::Schema.define(version: 2020_10_18_041916) do
     t.text "domain"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "sc_thread_keywords", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.bigint "sc_thread_id"
+    t.string "word", comment: "キーワード"
+    t.integer "appearances", comment: "キーワードの出現回数"
+    t.boolean "is_used", comment: "キーワードを使用するかどうか"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sc_thread_id"], name: "index_sc_thread_keywords_on_sc_thread_id"
   end
 
   create_table "sc_threads", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|

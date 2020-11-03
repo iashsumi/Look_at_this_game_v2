@@ -5,6 +5,7 @@ ENV APP_ROOT /app
 WORKDIR $APP_ROOT
  
 RUN apt-get update -qq && apt-get install -y vim
+RUN apt-get install libmecab2 libmecab-dev mecab mecab-ipadic mecab-ipadic-utf8 mecab-utils
 
 COPY Gemfile $APP_ROOT
 COPY Gemfile.lock $APP_ROOT

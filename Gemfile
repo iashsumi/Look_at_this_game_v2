@@ -63,6 +63,7 @@ gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
 gem "activerecord-import"
 gem "aws-sdk"
 gem "kaminari"
+gem 'natto'
 gem "nokogiri"
 gem "ridgepole"
 gem "rubocop-rails"

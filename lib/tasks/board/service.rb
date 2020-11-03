@@ -3,6 +3,7 @@
 require "open-uri"
 require "nokogiri"
 require "json"
+require 'natto'
 
 class Tasks::Board::Service
   def update_thread
@@ -28,6 +29,8 @@ class Tasks::Board::Service
   end
 
   def fetch_res(url)
+    @meisi = []
+    @do = []
     dat = fetch_html(url)
     return if dat.blank?
 
@@ -43,7 +46,17 @@ class Tasks::Board::Service
     # レス抽出
     reply = fetch_reply(data)
     # レス付きのみ抽出
-    fetch_reply_exist(data, reply)
+    result = fetch_reply_exist(data, reply)
+    result.each do | i |
+      m, d = analyze(i[:text])
+      i[:m_tags] = m
+      i[:d_tag] = d
+    end
+    meta = {
+      m_tag_all: @meisi.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v },
+      d_tag_all: @do.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v }
+    }
+    [result, meta]
   end
 
   # 勢いの計算
@@ -148,13 +161,24 @@ class Tasks::Board::Service
         image.delete_prefix("http").prepend("https") unless image[0..4] == "https"
         images << image
       end
-      { title: title, no: no, name: name, date: date, id: id, text: text, images: images }
+      text_temp = ActionController::Base.helpers.strip_tags(text)
+      res_no = text_temp.match(/&gt;&gt;[0-9]*/).blank? ? nil : text_temp.match(/&gt;&gt;[0-9]*/)[0].gsub('&gt;&gt;', '').to_i
+      # text = text.gsub(/&gt;&gt;[0-9]*/, '')
+      { title: title, no: no, res_no: res_no, name: name, date: date, id: id, text: text, images: images }
     end
 
     # レスを抽出
     def fetch_reply(data)
       reply = []
       data.each do |item|
+        # next if item[:res_no].blank?
+        # # 自分自身へのレスがあったら追加しない
+        # next if item[:res_no] == item[:no]
+        # # 循環参照になりうるレスは追加しない(自分の投稿よりあとへのレスもある)
+        # next if item[:res_no] > item[:no]
+        # # 1へのレスは追加しない
+        # next if item[:res_no] == 1
+        # reply << { no: item[:no], parent_no: item[:res_no], item: item }
         ele = Nokogiri::HTML.parse(item[:text], nil, "CP932")
         ele.search("a").each do |node|
           # ">>101"この状態なので、不要な部分を削除して、Intに変換
@@ -217,5 +241,34 @@ class Tasks::Board::Service
         target = a.flatten
       end
       result.flatten
+    end
+
+    def analyze(str)
+      nm = Natto::MeCab.new
+      # <<XXXを削除
+      target = ActionController::Base.helpers.strip_tags(str).gsub(/&gt;&gt;[0-9]*/, '')
+      # URLを除去
+      URI.extract(target).uniq.each {|url| target.gsub!(url, '')}
+      hukugo = []
+      value1 = []
+      value2 = []
+      nm.parse(target) do | n |
+        if n.feature.split(",").first == '名詞' && (n.feature.split(",")[1] == '固有名詞' || n.feature.split(",")[1] == '一般')
+          # １文字除外
+          next if n.surface.length == 1
+          # 名刺が続けば連結
+          hukugo << n.surface
+        else
+          @meisi << hukugo.join unless hukugo.blank?
+          value1 << hukugo.join unless hukugo.blank?
+          # 名刺以外の場合は初期化
+          hukugo = []
+        end
+        if ['動詞', '助詞', '助動詞'].include?(n.feature.split(",").first)
+          @do << n.surface
+          value2 << n.surface
+        end
+      end
+      [value1.uniq, value2.uniq]
     end
 end
