@@ -25,7 +25,7 @@ class ScThreads::IndexViewModel
           board_name: thread.sc_board.title,
           title: thread.title,
           url: thread.url,
-          thumbnail_url: thumbnail_url.thread.url,
+          thumbnail_url: thread.thumbnail_url,
           thread_created_at: thread.thread_created_at.strftime("%Y/%m/%d %H:%M:%S"),
           res: thread.res,
           momentum: thread.momentum,
