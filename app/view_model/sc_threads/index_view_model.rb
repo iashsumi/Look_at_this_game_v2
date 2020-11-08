@@ -23,6 +23,7 @@ class ScThreads::IndexViewModel
           id: thread.id,
           board_id: thread.sc_board_id,
           board_name: thread.sc_board.title,
+          board_thumbnail_url: thread.sc_board.thumbnail_url,
           title: thread.title,
           url: thread.url,
           thumbnail_url: thread.thumbnail_url,

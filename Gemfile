@@ -67,6 +67,7 @@ gem 'natto'
 gem "nokogiri"
 gem "ridgepole"
 gem "rubocop-rails"
+gem 'twitter'
 
 # エラー通知
 gem "exception_notification", github: "smartinez87/exception_notification"

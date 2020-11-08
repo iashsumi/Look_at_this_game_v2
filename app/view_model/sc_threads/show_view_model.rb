@@ -10,6 +10,7 @@ class ScThreads::ShowViewModel
       id: @sc_thread.id,
       board_id: @sc_thread.sc_board_id,
       board_name: @sc_thread.sc_board.title,
+      board_thumbnail_url: @sc_thread.sc_board.thumbnail_url,
       title: @sc_thread.title,
       url: @sc_thread.url,
       thread_created_at: @sc_thread.thread_created_at.strftime("%Y/%m/%d %H:%M:%S"),

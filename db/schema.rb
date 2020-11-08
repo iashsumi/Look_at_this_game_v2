@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_08_041916) do
+ActiveRecord::Schema.define(version: 2020_11_08_221916) do
 
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
@@ -51,6 +51,12 @@ ActiveRecord::Schema.define(version: 2020_11_08_041916) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "ng_words", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "word", comment: "NGワード"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "sc_boards", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title"
     t.text "threads_url", comment: "スレッド一覧のURL"
@@ -76,6 +82,7 @@ ActiveRecord::Schema.define(version: 2020_11_08_041916) do
     t.text "url"
     t.text "thumbnail_url"
     t.datetime "thread_created_at", comment: "スレッド内の1番目の投稿の時間"
+    t.integer "before_res", comment: "前回のレス数"
     t.integer "res", comment: "レスの数"
     t.decimal "momentum", precision: 10, scale: 3, comment: "勢い"
     t.boolean "is_completed", comment: "スレのデータを取得ずみかどうか(trueのデータのみフロントに返す)"

@@ -46,16 +46,46 @@ class Tasks::Board::Service
     # レス抽出
     reply = fetch_reply(data)
     # レス付きのみ抽出
-    result = fetch_reply_exist(data, reply)
-    result.each do | i |
+    tmp = fetch_reply_exist(data, reply)
+    tmp.each do | i |
+      # 1番目は除外
+      next if i[:no] == 1
+
       m, d = analyze(i[:text])
       i[:m_tags] = m
       i[:d_tag] = d
+      i[:children].each do | j |
+        m, d = analyze(j[:text])
+        j[:m_tags] = m
+        j[:d_tag] = d
+      end
     end
     meta = {
       m_tag_all: @meisi.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v },
       d_tag_all: @do.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v }
     }
+
+    result = []
+    # フィルター作成(閾値は10でNGワードを含んでいないもの)
+    filter = meta[:m_tag_all].select{|i| i[1] >= 10 && !(NgWord.pluck(:word).include?(i[0])) }.map{|i| i.first }
+    tmp.each do | i |
+      # 1番目は除外
+      next if i[:no] == 1
+
+      start = result.length
+      # 親チェック
+      i[:m_tags].each do | j |
+        result << i if filter.include?(j)
+      end
+      next if result.length > start 
+      
+      # 子供チェック
+      i[:children].each do | j |
+        j[:m_tags].each do | k |
+          result << i if filter.include?(k)
+        end
+      end
+    end
     [result, meta]
   end
 
@@ -100,11 +130,13 @@ class Tasks::Board::Service
           title: obj[:title],
           url: obj[:url],
           thread_created_at: Time.at(thread_created_at),
-          res:  obj[:res],
+          before_res: obj[:res],
+          res: obj[:res],
           momentum: 0,
           is_completed: false
         )
       else
+        thread.before_res = thread.res
         thread.res = obj[:res]
         thread
       end
@@ -200,6 +232,8 @@ class Tasks::Board::Service
     def fetch_reply_exist(data, reply)
       target = []
       data.each do |item|
+        next if item[:res_no].present?
+
         # 1件目は必ず入れる
         target << item if item[:no] == 1
         res = reply.select { |i| i[:parent_no] == item[:no] }
@@ -208,14 +242,16 @@ class Tasks::Board::Service
         # 最初に入れているので除外 || すでに同じ項目がある場合は除外(子に対するレスなど)
         next if item[:no] == 1 || target.find { |i| i[:no] == item[:no] }.present?
 
-        target << item
+        children = []
         res.each do |i|
+          # レスに対するレスを取得
           fetch_res_loop(i, reply).each do |j|
-            # レスのデータは目印をつける
-            j[:item].store(:child, true)
-            target << j[:item]
+            children << j[:item]
           end
         end
+        children.uniq!
+        item[:children] = children
+        target << item
       end
       target.uniq
     end
