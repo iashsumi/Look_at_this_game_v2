@@ -59,7 +59,7 @@ class Tasks::Board::Exec < Tasks::Base
       d_client = Dynamo.new
       complete.each do | item |
         description = descriptions.find {|i| i[:id] == item.id  }[:text]
-        image_path = item.thumbnail_url.present? ? item.thumbnail_url : item.board.thumbnail_url
+        image_path = item.thumbnail_url.present? ? item.thumbnail_url : item.sc_board.thumbnail_url
         d_params = { id: "thread-#{item.id}", title: item.title, description: description, image_path: image_path  }
         d_client.update_item(d_params)
       end

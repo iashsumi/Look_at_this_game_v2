@@ -81,9 +81,8 @@ class Tasks::Board::Service
       
       # 子供チェック
       i[:children].each do | j |
-        j[:m_tags].each do | k |
-          result << i if filter.include?(k)
-        end
+        result << i if j[:m_tags].any? {| k | filter.include?(k) }
+        break if result.length > start 
       end
     end
     [result, meta]
