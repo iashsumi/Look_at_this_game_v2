@@ -66,7 +66,8 @@ class Tasks::Rss::Niconico < Tasks::Base
         link: params[:item]["link"],
         description: api_result["data"].first["description"],
         thumbnail_url: api_result["data"].first["thumbnailUrl"],
-        published_at: DateTime.parse(api_result["data"].first["startTime"]).strftime("%Y/%m/%d %H:%M:%S"),
+        # JSTなので-9時間
+        published_at: (DateTime.parse(api_result["data"].first["startTime"]) - Rational(9, 24) ).strftime("%Y/%m/%d %H:%M:%S"),
         view_count: api_result["data"].first["viewCounter"],
         created_at: created_at || Time.now,
         updated_at: Time.now
