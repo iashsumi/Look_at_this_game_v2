@@ -11,7 +11,7 @@ class TwitterClient
   end
 
   def tweet(messages, tags)
-    content = "#{messages.join("\n")} \n #{tag.map { |i| "##{i}" }.join(" ")}"
+    content = "#{messages.join("\n")} \n #{tags.map{ |i| "##{i}" }.join(" ")}"
     @client.update(content)
   end
 end
