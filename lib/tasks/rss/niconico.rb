@@ -65,7 +65,8 @@ class Tasks::Rss::Niconico < Tasks::Base
         title: api_result["data"].first["title"],
         link: params[:item]["link"],
         description: api_result["data"].first["description"],
-        thumbnail_url: api_result["data"].first["thumbnailUrl"],
+        # サムネには大きサイズを指定
+        thumbnail_url: "#{api_result["data"].first["thumbnailUrl"]}.L",
         # JSTなので-9時間
         published_at: (DateTime.parse(api_result["data"].first["startTime"]) - Rational(9, 24) ).strftime("%Y/%m/%d %H:%M:%S"),
         view_count: api_result["data"].first["viewCounter"],
