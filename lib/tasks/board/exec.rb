@@ -15,7 +15,8 @@ class Tasks::Board::Exec < Tasks::Base
     service.update_thread
     # 各板の勢いの強い順に並び替え、TOP200に対してスクレピングしてコメをまとめる(勢いが0のものは取得しない)
     complete = []
-    ScThread.where.not(momentum: 0).great.limit(200).each do |item|
+    descriptions = []
+    ScThread.where.not(momentum: 0).great.limit(5).each do |item|
       fetched_data, meta = service.fetch_res(item.url)
       next if fetched_data.blank?
 
@@ -26,6 +27,9 @@ class Tasks::Board::Exec < Tasks::Base
       item.thumbnail_url = res[:images].first if res.present?
       item.is_completed = true
       complete << item
+
+      # OGP対応
+      descriptions << {id: item.id, text: fetched_data[1][:text]} 
 
       # キーワード設定
       builds = []
@@ -52,5 +56,14 @@ class Tasks::Board::Exec < Tasks::Base
     ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])
     # 勢い計算
     service.calc_momentum
+    # OGP対応のためDynamoDBに情報を保存
+    d_client = Dynamo.new
+    complete.each do | item |
+      p 'OK'
+      description = descriptions.find {|i| i[:id] == item.id  }
+      image_path = item.thumbnail_url.blank? ? item.board.thumbnail_url : item.thumbnail_url
+      d_params = { id: "thread-#{item.id}", title: item.title, description: description, image_path: image_path  }
+      d_client.update_item(d_params)
+    end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_03_041916) do
+ActiveRecord::Schema.define(version: 2020_11_08_041916) do
 
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
@@ -54,6 +54,7 @@ ActiveRecord::Schema.define(version: 2020_11_03_041916) do
   create_table "sc_boards", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title"
     t.text "threads_url", comment: "スレッド一覧のURL"
+    t.text "thumbnail_url"
     t.text "domain"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
