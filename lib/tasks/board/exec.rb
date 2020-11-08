@@ -27,7 +27,7 @@ class Tasks::Board::Exec < Tasks::Base
       complete << item
 
       # OGP対応
-      descriptions << {id: item.id, text: fetched_data[1][:text]} 
+      descriptions << {id: item.id, text: fetched_data.first[:text]} 
 
       # キーワード設定
       builds = []
