@@ -85,7 +85,7 @@ class Tasks::Board::Service
         break if result.length > start 
       end
     end
-    [result, meta]
+    [result.uniq, meta]
   end
 
   # 勢いの計算
@@ -249,6 +249,7 @@ class Tasks::Board::Service
           end
         end
         children.uniq!
+        children.sort_by! { |a| a[:no] }
         item[:children] = children
         target << item
       end
