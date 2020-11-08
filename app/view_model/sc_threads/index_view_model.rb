@@ -21,13 +21,16 @@ class ScThreads::IndexViewModel
       @sc_threads.includes(:sc_board).map do |thread|
         {
           id: thread.id,
+          board_id: thread.sc_board_id,
           board_name: thread.sc_board.title,
           title: thread.title,
           url: thread.url,
+          thumbnail_url: thumbnail_url.thread.url,
           thread_created_at: thread.thread_created_at.strftime("%Y/%m/%d %H:%M:%S"),
           res: thread.res,
           momentum: thread.momentum,
-          updated_at: thread.updated_at.strftime("%Y/%m/%d %H:%M:%S")
+          updated_at: thread.updated_at.strftime("%Y/%m/%d %H:%M:%S"),
+          key_words: thread.sc_thread_keywords
         }
       end
     end
