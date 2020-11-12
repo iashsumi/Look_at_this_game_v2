@@ -14,7 +14,7 @@ class Tasks::Board::Exec < Tasks::Base
     # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
     complete = []
     descriptions = []
-    ScThread.where.not(momentum: 0).great.where('res > before_res').limit(400).each do |item|
+    ScThread.where.not(momentum: 0).great.where('res > before_res').limit(10).each do |item|
       fetched_data, meta = service.fetch_res(item.url)
       next if fetched_data.blank?
 
@@ -56,24 +56,44 @@ class Tasks::Board::Exec < Tasks::Base
     service.calc_momentum
     # OGP対応のためDynamoDBに情報を保存
     if Rails.env != "development"
-      d_client = Dynamo.new
-      complete.each do | item |
-        description = descriptions.find {|i| i[:id] == item.id  }[:text]
-        image_path = item.thumbnail_url.present? ? item.thumbnail_url : item.sc_board.thumbnail_url
-        d_params = { id: "thread-#{item.id}", title: item.title, description: description, image_path: image_path  }
-        d_client.update_item(d_params)
-      end
+      # d_client = Dynamo.new
+      # complete.each do | item |
+      #   description = descriptions.find {|i| i[:id] == item.id  }[:text]
+      #   image_path = item.thumbnail_url.present? ? item.thumbnail_url : item.sc_board.thumbnail_url
+      #   d_params = { id: "thread-#{item.id}", title: item.title, description: description, image_path: image_path  }
+      #   d_client.update_item(d_params)
+      # end
 
       # twitterへ投稿
-      messages = []
-      tags = []
-      t_client = TwitterClient.new
-      send_data = complete.first
-      messages << send_data.title
-      messages << "https://www.latg.site/thread/#{send_data.id}"
-      messages << "他 #{complete.length} 件 更新されました"
-      tags = send_data.sc_thread_keywords.where('appearances >= 20').pluck(:word)
-      t_client.tweet(messages, tags)
+      # messages = []
+      # tags = []
+      # t_client = TwitterClient.new
+      # send_data = complete.first
+      # messages << send_data.title
+      # messages << "https://www.latg.site/thread/#{send_data.id}"
+      # messages << "他 #{complete.length} 件 更新されました"
+      # tags = send_data.sc_thread_keywords.where('appearances >= 20').pluck(:word)
+      # t_client.tweet(messages, tags)
     end
+    # labeling
+    labels = Label.all
+    ups = []
+    ScThread.where(label: nil).find_each do | i |
+      if i.sc_board_id == 31
+        i.label = 'ポケモンGO'
+      else
+        selected = labels.select{|j| i.title.include?(j.word)}
+        next if selected.blank?
+        # 選択したものが同じラベルでない場合は通知
+        if selected.pluck(:label).uniq.length > 1
+          notifier = Slack::Notifier.new(Rails.application.credentials.slack_url, channel: "#notification")
+          notifier.ping("複数に該当する #{i.title}")
+          next
+        end
+        i.label = selected.first.label
+      end
+      ups << i
+    end
+    ScThread.import(ups, on_duplicate_key_update: [:label])
   end
 end
