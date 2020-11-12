@@ -14,7 +14,7 @@ class Tasks::Board::Exec < Tasks::Base
     # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
     complete = []
     descriptions = []
-    ScThread.where.not(momentum: 0).great.where('res > before_res').limit(10).each do |item|
+    ScThread.where.not(momentum: 0).great.where('res > before_res').limit(150).each do |item|
       fetched_data, meta = service.fetch_res(item.url)
       next if fetched_data.blank?
 
