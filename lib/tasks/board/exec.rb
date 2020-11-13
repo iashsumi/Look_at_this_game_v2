@@ -81,18 +81,20 @@ class Tasks::Board::Exec < Tasks::Base
     ScThread.where(label: nil).find_each do | i |
       if i.sc_board_id == 31
         i.label = 'ポケモンGO'
+        ups << i
       else
         selected = labels.select{|j| i.title.include?(j.word)}
         next if selected.blank?
         # 選択したものが同じラベルでない場合は通知
         if selected.pluck(:label).uniq.length > 1
-          notifier = Slack::Notifier.new(Rails.application.credentials.slack_url, channel: "#notification")
-          notifier.ping("複数に該当する #{i.title}")
+          # 件数多いので一旦コメントアウト
+          # notifier = Slack::Notifier.new(Rails.application.credentials.slack_url, channel: "#notification")
+          # notifier.ping("複数に該当する #{i.title}")
           next
         end
         i.label = selected.first.label
+        ups << i
       end
-      ups << i
     end
     ScThread.import(ups, on_duplicate_key_update: [:label])
   end
