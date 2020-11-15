@@ -9,11 +9,11 @@ class S3
     @client = Credential.create
   end
 
-  def put_object(file_name, body)
-    @client.put_object(bucket: BUCKET, key: file_name, body: body)
+  def put_object(file_name, body, bucket = BUCKET)
+    @client.put_object(bucket: bucket, key: file_name, body: body)
   end
 
-  def fetch_object(file_name)
-    @client.get_object(bucket: BUCKET, key: file_name).body.read
+  def fetch_object(file_name, bucket = BUCKET)
+    @client.get_object(bucket: bucket, key: file_name).body.read
   end
 end

@@ -129,7 +129,7 @@ class Tasks::Board::Service
           title: obj[:title],
           url: obj[:url],
           thread_created_at: Time.at(thread_created_at),
-          before_res: obj[:res],
+          before_res: 0,
           res: obj[:res],
           momentum: 0,
           is_completed: false

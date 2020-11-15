@@ -10,7 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_12_221916) do
+ActiveRecord::Schema.define(version: 202011152219209) do
+
+  create_table "articles", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "title"
+    t.bigint "game_id"
+    t.bigint "sc_thread_id"
+    t.string "key_word", comment: "この記事を作る元となったキーワード"
+    t.string "thumbnail_url", comment: "サムネ"
+    t.text "comments", comment: "親コメント一覧"
+    t.text "image_paths", comment: "画像パス一覧"
+    t.boolean "is_published", default: false, comment: "公開するかどうか"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_articles_on_game_id"
+    t.index ["sc_thread_id"], name: "index_articles_on_sc_thread_id"
+  end
 
   create_table "commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "site_kbn", limit: 1, null: false, comment: "動画のサイトのenum"
@@ -32,17 +47,12 @@ ActiveRecord::Schema.define(version: 2020_11_12_221916) do
 
   create_table "games", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title", comment: "ゲームタイトル"
+    t.string "title_min", comment: "タイトルの省略形"
     t.integer "kind", comment: "機種"
     t.datetime "release_date_at", comment: "発売日"
     t.string "publisher", comment: "販売元"
     t.text "description", comment: "説明"
-    t.string "description_video_id", comment: "紹介用の動画のID"
     t.string "thumbnail", comment: "ゲームのサムネ"
-    t.string "comments", comment: "ゲームへのコメントまとめ（S3のパスを保持する予定)"
-    t.string "thread_name", comment: "2chのスレタイ"
-    t.text "thread_url", comment: "2chのスレのURL"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "genres", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
@@ -54,6 +64,8 @@ ActiveRecord::Schema.define(version: 2020_11_12_221916) do
   create_table "labels", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "word"
     t.string "label"
+    t.bigint "game_id"
+    t.index ["game_id"], name: "index_labels_on_game_id"
   end
 
   create_table "ng_words", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
@@ -88,12 +100,15 @@ ActiveRecord::Schema.define(version: 2020_11_12_221916) do
     t.text "thumbnail_url"
     t.datetime "thread_created_at", comment: "スレッド内の1番目の投稿の時間"
     t.string "label"
+    t.boolean "is_series", default: false, comment: "総合版かどうか"
     t.integer "before_res", comment: "前回のレス数"
     t.integer "res", comment: "レスの数"
     t.decimal "momentum", precision: 10, scale: 3, comment: "勢い"
     t.boolean "is_completed", comment: "スレのデータを取得ずみかどうか(trueのデータのみフロントに返す)"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "game_id"
+    t.index ["game_id"], name: "index_sc_threads_on_game_id"
     t.index ["sc_board_id"], name: "index_sc_threads_on_sc_board_id"
   end
 
@@ -112,4 +127,6 @@ ActiveRecord::Schema.define(version: 2020_11_12_221916) do
     t.index ["commentator_id"], name: "index_videos_on_commentator_id"
   end
 
+  add_foreign_key "labels", "games"
+  add_foreign_key "sc_threads", "games"
 end
