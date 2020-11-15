@@ -171,7 +171,7 @@ class Tasks::Board::Exec < Tasks::Base
           child["text"].strip!
         end
       end
-      article.title = "【#{article.game.title_min}】#{comments.first}"
+      article.title = "【#{article.game.title_min}】#{comments.first}" if article.title.blank?
       article.comments = comments.join("\n")
       article.image_paths = images.join("\n")
       article.thumbnail_url = images.first
