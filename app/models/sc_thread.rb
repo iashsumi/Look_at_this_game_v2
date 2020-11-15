@@ -9,4 +9,5 @@ class ScThread < ApplicationRecord
   scope :fetched, -> { where.not(momentum: 0, is_completed: false) }
   scope :range, -> (from, to) { where(thread_created_at: from..to) }
   scope :labeling, -> { where.not(label: nil) }
+  scope :ranking, -> (from, to) { joins(:game).range(from, to).labeling.group("games.title").select("games.title AS title, count(*) AS count").order("count DESC") }
 end
