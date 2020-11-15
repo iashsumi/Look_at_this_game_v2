@@ -6,5 +6,7 @@ Rails.application.routes.draw do
     resources :videos, only: [:index]
     resources :sc_threads, only: [:index, :show]
     resources :dashboard, only: [:index]
+    resources :articles, only: [:index, :show]
+    resources :ranking, only: [:index]
   end
 end
