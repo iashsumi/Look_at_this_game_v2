@@ -184,7 +184,7 @@ class Tasks::Board::Exec < Tasks::Base
       # OGP対応
       if Rails.env != "development"
         d_client = Dynamo.new
-        next if get_item("matome-#{article.id}").present?
+        next if d_client.get_item("matome-#{article.id}").present?
         d_params = { id: "matome-#{article.id}", title: article.title, description: "#{article.game.title}(#{article.game.title_min})の#{article.key_word}に関する情報をまとめました。", image_path: article.thumbnail_url }
         d_client.update_item(d_params)
       end
