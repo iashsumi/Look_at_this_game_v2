@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 202011152219209) do
+ActiveRecord::Schema.define(version: 202011161031917) do
 
   create_table "articles", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title"
@@ -36,6 +36,11 @@ ActiveRecord::Schema.define(version: 202011152219209) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "configurations", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "name"
+    t.string "value", comment: "設定値"
+  end
+
   create_table "game_commentators", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.bigint "game_id"
     t.bigint "commentator_id"
@@ -46,6 +51,16 @@ ActiveRecord::Schema.define(version: 202011152219209) do
   end
 
   create_table "games", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "title", comment: "ゲームタイトル"
+    t.string "title_min", comment: "タイトルの省略形"
+    t.integer "kind", comment: "機種"
+    t.datetime "release_date_at", comment: "発売日"
+    t.string "publisher", comment: "販売元"
+    t.text "description", comment: "説明"
+    t.string "thumbnail", comment: "ゲームのサムネ"
+  end
+
+  create_table "games_copy", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title", comment: "ゲームタイトル"
     t.string "title_min", comment: "タイトルの省略形"
     t.integer "kind", comment: "機種"

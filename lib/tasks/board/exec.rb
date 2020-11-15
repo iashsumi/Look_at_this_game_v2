@@ -14,7 +14,8 @@ class Tasks::Board::Exec < Tasks::Base
     service.update_thread
     # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
     complete = []
-    ScThread.where.not(momentum: 0).great.where("res > before_res").limit(150).each do |item|
+    limit = Configuration.all.first.value.to_i
+    ScThread.where.not(momentum: 0).great.where("res > before_res").limit(limit).each do |item|
       fetched_data, meta = service.fetch_res(item.url)
       next if fetched_data.blank?
 
