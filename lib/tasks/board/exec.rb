@@ -12,6 +12,8 @@ class Tasks::Board::Exec < Tasks::Base
     service = Tasks::Board::Service.new
     # スレ更新
     service.update_thread
+    # 勢い計算
+    service.calc_momentum
     # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
     complete = []
     limit = Configuration.all.first.value.to_i
@@ -50,8 +52,6 @@ class Tasks::Board::Exec < Tasks::Base
     end
     # データ更新
     ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])
-    # 勢い計算
-    service.calc_momentum
     # labeling
     labels = Label.all
     ups = []
