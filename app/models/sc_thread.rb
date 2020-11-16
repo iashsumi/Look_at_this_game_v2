@@ -2,7 +2,7 @@
 
 class ScThread < ApplicationRecord
   belongs_to :sc_board
-  belongs_to :game
+  belongs_to :game, optional: true
   has_many :sc_thread_keywords
 
   scope :great, -> { order(momentum: "DESC") }
