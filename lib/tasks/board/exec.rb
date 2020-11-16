@@ -55,7 +55,7 @@ class Tasks::Board::Exec < Tasks::Base
     # labeling
     labels = Label.all
     ups = []
-    ScThread.where(label: nil).find_each do | i |
+    ScThread.where(game_id: nil).find_each do | i |
       if i.sc_board_id == 31
         i.label = "ポケモンGO"
         i.game_id = 218
@@ -73,7 +73,7 @@ class Tasks::Board::Exec < Tasks::Base
         ups << i
       end
     end
-    ScThread.import(ups, on_duplicate_key_update: [:label])
+    ScThread.import(ups, on_duplicate_key_update: [:label, :is_series, :game_id])
 
     # まとめサイト作成
     create_article
