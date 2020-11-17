@@ -172,6 +172,13 @@ class Tasks::Board::Exec < Tasks::Base
           child["text"].strip!
         end
       end
+
+      # S3にアップ
+      client.put_object("matome/#{article.id}", JSON.dump(matome))
+      
+      # 公開済のものは編集しない
+      next if article.is_published
+
       article.title = "【#{article.game.title_min}】#{comments.first}" if article.title.blank?
       article.comments = comments.join("\n")
       article.image_paths = images.join("\n")
@@ -179,10 +186,10 @@ class Tasks::Board::Exec < Tasks::Base
       article.is_published = (emoji_contained?(article.title) || comments.first.blank? || Article.where(sc_thread: obj.sc_thread, is_published: true).present?) ? false : true
       article.save
 
-      # S3にアップ
-      client.put_object("matome/#{article.id}", JSON.dump(matome))
-
       # OGP対応
+      # 未公開はOGP対応しない
+      next unless article.is_published
+
       if Rails.env != "development"
         d_client = Dynamo.new
         next if d_client.get_item("matome-#{article.id}").present?
