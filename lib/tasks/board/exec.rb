@@ -132,7 +132,8 @@ class Tasks::Board::Exec < Tasks::Base
 
       # データ作成
       article = Article.find_or_create_by(game: obj.sc_thread.game, sc_thread: obj.sc_thread, key_word: obj.word)
-      next if article.blank?
+      # 公開済のものは編集しない
+      next if article.is_published
 
       # 画像保存(look-at-this-game-public)+データ整形
       comments = []
@@ -142,7 +143,7 @@ class Tasks::Board::Exec < Tasks::Base
         i["images"].each do | path |
           images << path
           name = SecureRandom.uuid
-          client.put_object("matome/#{article.id}/#{name}", open(path), "look-at-this-game-public")
+          # client.put_object("matome/#{article.id}/#{name}", open(path), "look-at-this-game-public")
           new_image_path = "https://look-at-this-game-public.s3-ap-northeast-1.amazonaws.com/matome/#{article.id}/#{name}"
           new_images << new_image_path
         end
@@ -161,7 +162,8 @@ class Tasks::Board::Exec < Tasks::Base
           child["images"].each do | path |
             images << path
             name = SecureRandom.uuid
-            client.put_object("matome/#{article.id}/#{name}", open(path), "look-at-this-game-public")
+            # やるとしたらhashかな
+            # client.put_object("matome/#{article.id}/#{name}", open(path), "look-at-this-game-public")
             new_image_path = "https://look-at-this-game-public.s3-ap-northeast-1.amazonaws.com/matome/#{article.id}/#{name}"
             new_images << new_image_path
           end
@@ -175,9 +177,6 @@ class Tasks::Board::Exec < Tasks::Base
 
       # S3にアップ
       client.put_object("matome/#{article.id}", JSON.dump(matome))
-      
-      # 公開済のものは編集しない
-      next if article.is_published
 
       article.title = "【#{article.game.title_min}】#{comments.first}" if article.title.blank?
       article.comments = comments.join("\n")
