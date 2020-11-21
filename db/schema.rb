@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 202011161031917) do
+ActiveRecord::Schema.define(version: 202011212211916) do
 
   create_table "articles", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "title"
@@ -116,6 +116,7 @@ ActiveRecord::Schema.define(version: 202011161031917) do
     t.datetime "thread_created_at", comment: "スレッド内の1番目の投稿の時間"
     t.string "label"
     t.boolean "is_series", default: false, comment: "総合版かどうか"
+    t.boolean "is_backup", default: false
     t.integer "before_res", comment: "前回のレス数"
     t.integer "res", comment: "レスの数"
     t.decimal "momentum", precision: 10, scale: 3, comment: "勢い"

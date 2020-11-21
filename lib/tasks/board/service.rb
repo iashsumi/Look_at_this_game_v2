@@ -9,7 +9,7 @@ class Tasks::Board::Service
   def update_thread
     target = []
     ScBoard.all.each do |board|
-      doc = fetch_html(board.threads_url)
+      doc = Function.fetch_html(board.threads_url)
       next if doc.blank?
 
       doc.split(/\r\n|\r|\n/).each do |item|
@@ -31,7 +31,7 @@ class Tasks::Board::Service
   def fetch_res(url)
     @meisi = []
     @do = []
-    dat = fetch_html(url)
+    dat = Function.fetch_html(url)
     return if dat.blank?
 
     # ex."名前は開発中のものです<><>2018/05/04(金) 20:34:21.06 ID:1cp7WNOG.net<> アクションとFPSが好き、あとPC移るからPCゲーでもいい <>PS4やることないからおすすめ教えて\n
@@ -104,15 +104,6 @@ class Tasks::Board::Service
   end
 
   private
-    def fetch_html(url)
-      URI.open(url, "r:binary") do |f|
-        f.read.encode("utf-8", "cp932", invalid: :replace, undef: :replace)
-      end
-    rescue StandardError => e
-      ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: url })
-      nil
-    end
-
     def build_sc_thread(board, node)
       thread_created_at = build_thread_created_at(board, node)
       return if thread_created_at.zero?
