@@ -16,4 +16,14 @@ class S3
   def fetch_object(file_name, bucket = BUCKET)
     @client.get_object(bucket: bucket, key: file_name).body.read
   end
+
+  def delete_object(file_name, bucket = BUCKET)
+    @client.delete_object(bucket: bucket, key: file_name)
+  end
+
+  def delete_folder(folder, bucket = BUCKET)
+    s3 = Aws::S3::Resource.new
+    objects = s3.bucket(bucket).objects({prefix: folder})
+    objects.batch_delete!
+  end
 end

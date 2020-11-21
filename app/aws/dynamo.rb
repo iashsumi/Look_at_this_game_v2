@@ -39,4 +39,11 @@ class Dynamo
       update_expression: "SET #title = :title, #description = :description, #image_path = :image_path"
     })
   end
+
+  def delete_item(id)
+    @client.delete_item(
+      table_name: TABLE,
+      key: {id: id}
+    )
+  end
 end
