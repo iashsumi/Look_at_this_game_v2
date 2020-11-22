@@ -36,11 +36,11 @@ set :runner_command, "rails runner"
 #   runner "Tasks::Board::Exec.rescue_execute"
 # end
 
-every 1.day, at: '7:30 am' do do
+every 1.day, at: '7:30 am' do
   runner "Tasks::Board::Tmp.rescue_execute"
 end
 
-every 1.day, at: '7:30 am' do do
+every 1.day, at: '7:30 am' do
   runner "Tasks::Article::Tmp.rescue_execute"
 end
 
