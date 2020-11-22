@@ -26,31 +26,7 @@ class Tasks::Article::Create < Tasks::Base
         next if obj.word == obj.sc_thread.label
 
         key_words << obj
-      #   key = "#{obj.sc_thread.label} #{obj.word}"
-      #   data = cache.uniq.find { |i| i[:key] == key }
-      #   if data.present?
-      #     key_words << obj if data[:result]
-      #     next
-      #   end
-      #   uri = Addressable::URI.parse("http://www.google.com/complete/search?hl=jp&q=#{key}&output=toolbar")
-      #   response = Net::HTTP.get_response(uri.normalize)
-      #   next if response.body.blank?
-
-      #   begin
-      #     result = Hash.from_xml(response.body.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ''))&.dig("toplevel", "CompleteSuggestion")
-      #   rescue StandardError => e
-      #     ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: key })
-      #     next
-      #   end
-      #   # 上記APIのMAXの件数(多少のフィルターにはなるはず)
-      #   if result.present? && result.length >= 10
-      #     key_words << obj
-      #     cache << { key: key, result: true }
-      #     next
-      #   end
-      #   cache << { key: key, result: false }
-      # end
-      # return if key_words.blank?
+      end
 
       client = S3.new
       cache = []
@@ -91,8 +67,9 @@ class Tasks::Article::Create < Tasks::Base
           # URL除去
           URI.extract(i["text"]).uniq.each { |url| i["text"].gsub!(url, "") }
           i["images"].each do | path |
-            images << path
-            new_images << build_new_image_path(client, article, path)
+            new_image_path = build_new_image_path(client, article, path)
+            new_images << new_image_path
+            images << new_image_path
           end
           i["new_images"] = new_images.compact
           i["children"].each do | child |
@@ -100,8 +77,9 @@ class Tasks::Article::Create < Tasks::Base
             # URL除去
             URI.extract(child["text"]).uniq.each { |url| child["text"].gsub!(url, "") }
             child["images"].each do | path |
-              images << path
-              new_images_child << build_new_image_path(client, article, path)
+              new_image_path = build_new_image_path(client, article, path)
+              new_images_child << new_image_path
+              images << new_image_path
             end
             child["new_images"] = new_images_child.compact
           end
