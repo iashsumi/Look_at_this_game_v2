@@ -16,7 +16,7 @@ class Tasks::Article::Create < Tasks::Base
 
       if target.blank?
         # キーワード取得(ラベリング済)
-        target = ScThreadKeyword.eager_load(:sc_thread).merge(ScThread.range(from, to)).merge(ScThread.labeling).merge(ScThread.where(is_completed: true, is_backup: true)).limit(200)
+        target = ScThreadKeyword.eager_load(:sc_thread).merge(ScThread.range(from, to)).merge(ScThread.labeling).merge(ScThread.where(is_completed: true))
       end
 
       key_words = []
@@ -87,6 +87,8 @@ class Tasks::Article::Create < Tasks::Base
         images = []
         matome.each do | i |
           new_images = []
+          # URL除去
+          URI.extract(i["text"]).uniq.each { |url| i["text"].gsub!(url, "") }
           i["images"].each do | path |
             images << path
             new_images << build_new_image_path(client, article, path)
@@ -94,6 +96,8 @@ class Tasks::Article::Create < Tasks::Base
           i["new_images"] = new_images.compact
           i["children"].each do | child |
             new_images_child = []
+            # URL除去
+            URI.extract(child["text"]).uniq.each { |url| child["text"].gsub!(url, "") }
             child["images"].each do | path |
               images << path
               new_images_child << build_new_image_path(client, article, path)

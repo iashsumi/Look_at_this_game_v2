@@ -37,7 +37,7 @@ every 1.hours do
 end
 
 every 1.hours do
-  runner "Tasks::Article::Create.rescue_execute"
+  runner "Tasks::Article::Tmp.rescue_execute"
 end
 
 # YouTube RSS
