@@ -54,6 +54,8 @@ class Tasks::Board::Exec < Tasks::Base
       end
       ScThreadKeyword.where(sc_thread_id: item.id).delete_all
       ScThreadKeyword.import(builds)
+    rescue StandardError => e
+      ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: item.id })
     end
     # データ更新
     ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])

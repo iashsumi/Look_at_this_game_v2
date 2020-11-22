@@ -33,7 +33,7 @@ set :runner_command, "rails runner"
 
 # まとめ情報作成
 every 1.hours do
-  runner "Tasks::Board::Exec.rescue_execute"
+  runner "Tasks::Tmp::Exec.rescue_execute"
 end
 
 # YouTube RSS
