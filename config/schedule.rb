@@ -36,13 +36,13 @@ set :runner_command, "rails runner"
 #   runner "Tasks::Board::Exec.rescue_execute"
 # end
 
-every 1.hours do
+every 1.day, at: '7:30 am' do do
   runner "Tasks::Board::Tmp.rescue_execute"
 end
 
-# every 1.hours do
-#   runner "Tasks::Article::Tmp.rescue_execute"
-# end
+every 1.day, at: '7:30 am' do do
+  runner "Tasks::Article::Tmp.rescue_execute"
+end
 
 # YouTube RSS
 every 30.minute do
