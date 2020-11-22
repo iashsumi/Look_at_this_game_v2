@@ -35,7 +35,12 @@ class Tasks::Article::Create < Tasks::Base
         response = Net::HTTP.get_response(uri.normalize)
         next if response.body.blank?
 
-        result = Hash.from_xml(response.body)&.dig("toplevel", "CompleteSuggestion")
+        begin
+          result = Hash.from_xml(response.body.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ''))&.dig("toplevel", "CompleteSuggestion")
+        rescue StandardError => e
+          ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: key })
+          next
+        end
         # 上記APIのMAXの件数(多少のフィルターにはなるはず)
         if result.present? && result.length >= 10
           key_words << obj
