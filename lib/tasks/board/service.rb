@@ -28,10 +28,10 @@ class Tasks::Board::Service
     ScThread.import(target, on_duplicate_key_update: [:res])
   end
 
-  def fetch_res(url)
+  def fetch_res(url, dat = nil)
     @meisi = []
     @do = []
-    dat = Function.fetch_html(url)
+    dat = dat.blank? ? Function.fetch_html(url) : dat
     return if dat.blank?
 
     # ex."名前は開発中のものです<><>2018/05/04(金) 20:34:21.06 ID:1cp7WNOG.net<> アクションとFPSが好き、あとPC移るからPCゲーでもいい <>PS4やることないからおすすめ教えて\n

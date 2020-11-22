@@ -7,7 +7,7 @@ require "json"
 require "addressable/uri"
 
 class Tasks::Board::Exec < Tasks::Base
-  def self.execute
+  def self.execute(target_threads = nil)
     client = S3.new
     service = Tasks::Board::Service.new
     # スレ更新
@@ -17,8 +17,16 @@ class Tasks::Board::Exec < Tasks::Base
     # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
     complete = []
     limit = Configuration.all.first.value.to_i
-    ScThread.where.not(momentum: 0).great.where("res > before_res").limit(limit).each do |item|
-      fetched_data, meta = service.fetch_res(item.url)
+
+    if target_threads.blank?
+      target_threads = ScThread.where.not(momentum: 0).great.where("res > before_res").limit(limit)
+    end
+
+    target_threads.each do |item|
+      # 取得の間隔制御
+      sleep 3 unless item.is_backup
+      dat = item.is_backup ? client.fetch_object("backup/#{item.id}") : nil
+      fetched_data, meta = service.fetch_res(item.url, dat)
       next if fetched_data.blank?
 
       # S3 UPLOAD
@@ -46,9 +54,6 @@ class Tasks::Board::Exec < Tasks::Base
       end
       ScThreadKeyword.where(sc_thread_id: item.id).delete_all
       ScThreadKeyword.import(builds)
-
-      # 取得の間隔制御
-      sleep 3
     end
     # データ更新
     ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])
