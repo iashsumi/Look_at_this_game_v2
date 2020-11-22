@@ -25,31 +25,32 @@ class Tasks::Article::Create < Tasks::Base
         # ラベルと同じものはSKIP ドラクエ ドラクエみたいな検索避けるため
         next if obj.word == obj.sc_thread.label
 
-        key = "#{obj.sc_thread.label} #{obj.word}"
-        data = cache.uniq.find { |i| i[:key] == key }
-        if data.present?
-          key_words << obj if data[:result]
-          next
-        end
-        uri = Addressable::URI.parse("http://www.google.com/complete/search?hl=jp&q=#{key}&output=toolbar")
-        response = Net::HTTP.get_response(uri.normalize)
-        next if response.body.blank?
+        key_words << obj
+      #   key = "#{obj.sc_thread.label} #{obj.word}"
+      #   data = cache.uniq.find { |i| i[:key] == key }
+      #   if data.present?
+      #     key_words << obj if data[:result]
+      #     next
+      #   end
+      #   uri = Addressable::URI.parse("http://www.google.com/complete/search?hl=jp&q=#{key}&output=toolbar")
+      #   response = Net::HTTP.get_response(uri.normalize)
+      #   next if response.body.blank?
 
-        begin
-          result = Hash.from_xml(response.body.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ''))&.dig("toplevel", "CompleteSuggestion")
-        rescue StandardError => e
-          ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: key })
-          next
-        end
-        # 上記APIのMAXの件数(多少のフィルターにはなるはず)
-        if result.present? && result.length >= 10
-          key_words << obj
-          cache << { key: key, result: true }
-          next
-        end
-        cache << { key: key, result: false }
-      end
-      return if key_words.blank?
+      #   begin
+      #     result = Hash.from_xml(response.body.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: ''))&.dig("toplevel", "CompleteSuggestion")
+      #   rescue StandardError => e
+      #     ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: key })
+      #     next
+      #   end
+      #   # 上記APIのMAXの件数(多少のフィルターにはなるはず)
+      #   if result.present? && result.length >= 10
+      #     key_words << obj
+      #     cache << { key: key, result: true }
+      #     next
+      #   end
+      #   cache << { key: key, result: false }
+      # end
+      # return if key_words.blank?
 
       client = S3.new
       cache = []
