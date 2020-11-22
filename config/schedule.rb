@@ -36,6 +36,10 @@ every 1.hours do
   runner "Tasks::Board::Tmp.rescue_execute"
 end
 
+every 1.hours do
+  runner "Tasks::Article::Create.rescue_execute"
+end
+
 # YouTube RSS
 every 30.minute do
   runner "Tasks::Rss::Youtube.rescue_execute"

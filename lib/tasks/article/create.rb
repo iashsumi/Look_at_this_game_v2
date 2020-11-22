@@ -16,7 +16,7 @@ class Tasks::Article::Create < Tasks::Base
 
       if target.blank?
         # キーワード取得(ラベリング済)
-        target = ScThreadKeyword.eager_load(:sc_thread).merge(ScThread.range(from, to)).merge(ScThread.labeling).merge(ScThread.where(is_completed: true))
+        target = ScThreadKeyword.eager_load(:sc_thread).merge(ScThread.range(from, to)).merge(ScThread.labeling).merge(ScThread.where(is_completed: true, is_backup: true)).limit(200)
       end
 
       key_words = []
