@@ -110,14 +110,10 @@ class Tasks::Article::Service
     def build_matome(data, reply)
       target = []
       data.each do |item|
+        next if item[:res_no].present?
+
         # 1件目は必ず入れる
         target << item if item[:no] == 1
-        # レスがないものも入れる
-        if item[:res_no].blank?
-          item[:children] = []
-          target << item
-          next
-        end
         res = reply.select { |i| i[:parent_no] == item[:no] }
         next if res.blank?
 
