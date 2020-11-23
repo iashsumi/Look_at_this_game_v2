@@ -5,30 +5,8 @@ require "nokogiri"
 require "json"
 require 'natto'
 
-class Tasks::Board::Service
-  def update_thread
-    target = []
-    ScBoard.all.each do |board|
-      doc = Function.fetch_html(board.threads_url)
-      next if doc.blank?
-
-      doc.split(/\r\n|\r|\n/).each do |item|
-        ele = Nokogiri::HTML.parse(item)
-        ele.search("a").each do |node|
-          obj = build_sc_thread(board, node)
-          next if obj.blank?
-
-          target << obj
-        end
-      rescue StandardError => e
-        ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: board.title })
-        next
-      end
-    end
-    ScThread.import(target, on_duplicate_key_update: [:res])
-  end
-
-  def fetch_res(url, dat = nil)
+class Tasks::Article::Service
+  def fetch_data(url, dat = nil)
     @meisi = []
     @do = []
     dat = dat.blank? ? Function.fetch_html(url) : dat
@@ -43,104 +21,49 @@ class Tasks::Board::Service
 
       data << parse_dat(index, values)
     end
-    data.each do | i |
+    # レス抽出
+    reply = fetch_reply(data)
+    # まとめ作成
+    tmp = build_matome(data, reply)
+    tmp.each do | i |
       # 1番目は除外
       next if i[:no] == 1
 
       m, d = analyze(i[:text])
       i[:m_tags] = m
-      i[:d_tag] = d
       i[:children].each do | j |
         m, d = analyze(j[:text])
         j[:m_tags] = m
-        j[:d_tag] = d
       end
     end
     meta = {
-      m_tag_all: @meisi.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v },
-      d_tag_all: @do.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v }
+      m_tag_all: @meisi.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v }
     }
-    [data.uniq, meta]
-  end
 
-  # 勢いの計算
-  def calc_momentum
-    target = []
-    # レスが20より多いものが対象
-    ScThread.where("res > 20").find_each do |item|
-      next if item.thread_created_at.blank?
+    result = []
+    # フィルター作成(閾値は10でNGワードを含んでいないもの)
+    filter = meta[:m_tag_all].select{|i| i[1] >= 10 && !(NgWord.kind_all.pluck(:word).include?(i[0])) }.map{|i| i.first }
+    tmp.each do | i |
+      # 1番目は除外
+      next if i[:no] == 1
 
-      # レス数 / (現在のUNIX時間 - スレッド内の1番目の投稿のUNIX時間) ÷ 86400
-      num = (Time.now.to_i - item.thread_created_at.to_i).to_f / 86_400.to_f
-      item.momentum = num.zero? ? 0 : item.res / num
-      target << item
+      start = result.length
+      # 親チェック
+      i[:m_tags].each do | j |
+        result << i if filter.include?(j)
+      end
+      next if result.length > start 
+      
+      # 子供チェック
+      i[:children].each do | j |
+        result << i if j[:m_tags].any? {| k | filter.include?(k) }
+        break if result.length > start 
+      end
     end
-    ScThread.import(target, on_duplicate_key_update: [:momentum])
+    [result.uniq, meta]
   end
 
   private
-    def build_sc_thread(board, node)
-      thread_created_at = build_thread_created_at(board, node)
-      return if thread_created_at.zero?
-
-      # undefined method '+' for nil:NilClassが多いのでチェック
-      return if node.children.text.index(":").blank?
-      return if node.children.text.rindex("(").blank?
-
-      obj =  build_attr(board, node, thread_created_at)
-      thread = ScThread.where(sc_board: board, url: obj[:url]).first
-      if thread.blank?
-        thread = ScThread.new(
-          sc_board: board,
-          title: obj[:title],
-          url: obj[:url],
-          thread_created_at: Time.at(thread_created_at),
-          before_res: 0,
-          res: obj[:res],
-          momentum: 0,
-          is_completed: false
-        )
-      else
-        thread.before_res = thread.res
-        thread.res = obj[:res]
-        thread
-      end
-      thread
-    end
-
-    def build_thread_created_at(board, node)
-      thread_created_at = 0
-      begin
-        # 1596038088/l50 前半ユニックスタイムスタンプ=スレ立った時間
-        # 変換できないケースもあるので例外処理する
-        thread_created_at = node.attributes["href"].value.match(/\d*/m)[0].to_i
-      rescue StandardError => e
-        ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: board.title })
-        return 0
-      end
-      thread_created_at
-    end
-
-    def build_attr(board, node, thread_created_at)
-      # スレタイ 791: ★psハード買おうと思ってるんだけど (3)
-      start_index = node.children.text.index(":").to_i + 2
-      end_index = node.children.text.rindex("(").to_i - 1
-
-      # 星付きは除去して表示
-      title = node.children.text[start_index...end_index][0] == "★" ? node.children.text[(start_index + 1)...end_index] : node.children.text[start_index...end_index]
-      # スレNo XXXの形式で取得
-      # node.children.text.match(%r@\d{1,4}@m)
-      # レス数 (XXX)の形式で取得
-      res = node.children.text.match(/\(\d{1,4}\)/m)[0]
-      res_i = res.slice(1, (res.length - 1)).to_i
-      url = "#{board.domain}dat/#{thread_created_at}.dat"
-      {
-        title: title,
-        res: res_i,
-        url: url
-      }
-    end
-
     def parse_dat(index, values)
       no = index + 1
       title = values[4] if values.size == 5
@@ -160,7 +83,6 @@ class Tasks::Board::Service
       end
       text_temp = ActionController::Base.helpers.strip_tags(text)
       res_no = text_temp.match(/&gt;&gt;[0-9]*/).blank? ? nil : text_temp.match(/&gt;&gt;[0-9]*/)[0].gsub('&gt;&gt;', '').to_i
-      # text = text.gsub(/&gt;&gt;[0-9]*/, '')
       { title: title, no: no, res_no: res_no, name: name, date: date, id: id, text: text, images: images }
     end
 
@@ -168,14 +90,6 @@ class Tasks::Board::Service
     def fetch_reply(data)
       reply = []
       data.each do |item|
-        # next if item[:res_no].blank?
-        # # 自分自身へのレスがあったら追加しない
-        # next if item[:res_no] == item[:no]
-        # # 循環参照になりうるレスは追加しない(自分の投稿よりあとへのレスもある)
-        # next if item[:res_no] > item[:no]
-        # # 1へのレスは追加しない
-        # next if item[:res_no] == 1
-        # reply << { no: item[:no], parent_no: item[:res_no], item: item }
         ele = Nokogiri::HTML.parse(item[:text], nil, "CP932")
         ele.search("a").each do |node|
           # ">>101"この状態なので、不要な部分を削除して、Intに変換
@@ -193,14 +107,17 @@ class Tasks::Board::Service
       reply
     end
 
-    # レスがあるものだけを抽出
-    def fetch_reply_exist(data, reply)
+    def build_matome(data, reply)
       target = []
       data.each do |item|
-        next if item[:res_no].present?
-
         # 1件目は必ず入れる
         target << item if item[:no] == 1
+        # レスがないものも入れる
+        if item[:res_no].blank?
+          item[:children] = []
+          target << item
+          next
+        end
         res = reply.select { |i| i[:parent_no] == item[:no] }
         next if res.blank?
 

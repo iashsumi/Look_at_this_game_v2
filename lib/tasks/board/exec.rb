@@ -14,33 +14,22 @@ class Tasks::Board::Exec < Tasks::Base
     service.update_thread
     # 勢い計算
     service.calc_momentum
-    # 各板の勢いの強い順に並び替え、スクレピングしてコメをまとめる
-    complete = []
-    limit = Configuration.all.first.value.to_i
-
     if target_threads.blank?
-      target_threads = ScThread.where.not(momentum: 0).great.where("res > before_res").limit(limit)
+      target_threads = ScThread.where(is_backup: true, is_completed: false)
     end
 
     target_threads.each do |item|
-      # 取得の間隔制御
-      sleep 3 unless item.is_backup
-      dat = item.is_backup ? client.fetch_object("backup/#{item.id}") : nil
+      dat = client.fetch_object("backup/#{item.id}")
       fetched_data, meta = service.fetch_res(item.url, dat)
       next if fetched_data.blank?
 
-      # S3 UPLOAD
-      client.put_object("sc_thread_keywords/#{item.id}", JSON.dump(meta))
-      client.put_object(item.id.to_s, JSON.dump(fetched_data))
-      res = fetched_data.find { |i| i[:images].present? }
-      item.thumbnail_url = res[:images].first if res.present?
       item.is_completed = true
-      complete << item
+      item.save!
 
       # キーワード設定
       builds = []
       meta[:m_tag_all].each do | k |
-        next if NgWord.pluck(:word).include?(k[0])
+        next if NgWord.kind_all.pluck(:word).include?(k[0])
         next if k[1] < 10
 
         target = ScThreadKeyword.new
@@ -57,8 +46,6 @@ class Tasks::Board::Exec < Tasks::Base
     rescue StandardError => e
       ExceptionNotifier.notify_exception(e, env: Rails.env, data: { message: item.id })
     end
-    # データ更新
-    ScThread.import(complete, on_duplicate_key_update: [:thumbnail_url, :is_completed])
     # labeling
     labels = Label.all
     ups = []
