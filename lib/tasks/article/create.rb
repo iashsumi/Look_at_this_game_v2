@@ -140,6 +140,8 @@ class Tasks::Article::Create < Tasks::Base
       image_key = Digest::SHA256.hexdigest(path)
       client.put_object("matome_images/#{article.id}/#{image_key}", tmp_image, "look-at-this-game-public")
       image_key
+    rescue StandardError => e
+      return "NoImage"
     end
   end
 end
