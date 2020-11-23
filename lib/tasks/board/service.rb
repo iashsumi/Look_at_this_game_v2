@@ -43,7 +43,11 @@ class Tasks::Board::Service
 
       data << parse_dat(index, values)
     end
-    data.each do | i |
+    # レス抽出
+    reply = fetch_reply(data)
+    # レス付きのみ抽出
+    tmp = fetch_reply_exist(data, reply)
+    tmp.each do | i |
       # 1番目は除外
       next if i[:no] == 1
 
@@ -60,7 +64,28 @@ class Tasks::Board::Service
       m_tag_all: @meisi.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v },
       d_tag_all: @do.group_by(&:itself).map {|k, v| [k, v.size] }.sort_by{ |_, v| -v }
     }
-    [data.uniq, meta]
+
+    result = []
+    # フィルター作成(閾値は10でNGワードを含んでいないもの)
+    filter = meta[:m_tag_all].select{|i| i[1] >= 10 && !(NgWord.pluck(:word).include?(i[0])) }.map{|i| i.first }
+    tmp.each do | i |
+      # 1番目は除外
+      next if i[:no] == 1
+
+      start = result.length
+      # 親チェック
+      i[:m_tags].each do | j |
+        result << i if filter.include?(j)
+      end
+      next if result.length > start 
+      
+      # 子供チェック
+      i[:children].each do | j |
+        result << i if j[:m_tags].any? {| k | filter.include?(k) }
+        break if result.length > start 
+      end
+    end
+    [result.uniq, meta]
   end
 
   # 勢いの計算
