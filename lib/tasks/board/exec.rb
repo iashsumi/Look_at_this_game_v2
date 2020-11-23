@@ -15,7 +15,8 @@ class Tasks::Board::Exec < Tasks::Base
     # 勢い計算
     service.calc_momentum
     if target_threads.blank?
-      target_threads = ScThread.where(is_backup: true, is_completed: false)
+      limit = Configuration.all.first.value.to_i
+      target_threads = ScThread.where(is_backup: true, is_completed: false).limit(limit)
     end
 
     target_threads.each do |item|
